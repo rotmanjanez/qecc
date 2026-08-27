@@ -17,7 +17,7 @@ permissions: {}
 jobs:
   change-detection:
     name: 🔍 Change
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-change-detection.yml@063c90c8e7e094bfffb73f8436eb55341c1e820f # v2.3.0
+    uses: rotmanjanez/workflows/.github/workflows/reusable-change-detection.yml@12d222543e4e7ec0923a44fa8ecc705357a8e1c8 # feat/python-version-matrix
     permissions:
       contents: read
 
@@ -26,12 +26,14 @@ jobs:
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-tests)
     strategy:
-      fail-fast: false
       matrix:
-        runs-on: [ubuntu-24.04, ubuntu-24.04-arm, macos-26, windows-2022]
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-tests.yml@063c90c8e7e094bfffb73f8436eb55341c1e820f # v2.3.0
+        # Linux-only while testing the new one-version-per-job architecture
+        runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-tests.yml@12d222543e4e7ec0923a44fa8ecc705357a8e1c8 # feat/python-version-matrix
     with:
       runs-on: ${{ matrix.runs-on }}
+      python-version: ${{ matrix.python-version }}
     permissions:
       contents: read
 
@@ -39,7 +41,7 @@ jobs:
     name: 🐍 Coverage
     needs: [change-detection, python-tests]
     if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-coverage.yml@063c90c8e7e094bfffb73f8436eb55341c1e820f # v2.3.0
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-coverage.yml@12d222543e4e7ec0923a44fa8ecc705357a8e1c8 # feat/python-version-matrix
     permissions:
       contents: read
       id-token: write
@@ -48,7 +50,7 @@ jobs:
     name: 🐍 Lint
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-linter)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-linter.yml@063c90c8e7e094bfffb73f8436eb55341c1e820f # v2.3.0
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-linter.yml@12d222543e4e7ec0923a44fa8ecc705357a8e1c8 # feat/python-version-matrix
     with:
       enable-ty: true
       enable-mypy: false
@@ -59,7 +61,7 @@ jobs:
     name: 🚀 CD
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cd)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-sdist.yml@063c90c8e7e094bfffb73f8436eb55341c1e820f # v2.3.0
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-packaging-sdist.yml@12d222543e4e7ec0923a44fa8ecc705357a8e1c8 # feat/python-version-matrix
     permissions:
       contents: read
 
@@ -67,7 +69,7 @@ jobs:
     name: 🚀 CD
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cd)
-    uses: munich-quantum-toolkit/workflows/.github/workflows/reusable-python-packaging-wheel-build.yml@063c90c8e7e094bfffb73f8436eb55341c1e820f # v2.3.0
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-packaging-wheel-build.yml@12d222543e4e7ec0923a44fa8ecc705357a8e1c8 # feat/python-version-matrix
     permissions:
       contents: read
 
