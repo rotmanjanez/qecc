@@ -34,6 +34,11 @@ jobs:
     with:
       runs-on: ${{ matrix.runs-on }}
       python-version: ${{ matrix.python-version }}
+      # The two sessions run the same suite, once against the lowest-direct
+      # resolution and once against the current one, so running both in every
+      # job doubles the work for no extra signal. Pin the floor check to the
+      # oldest supported interpreter and test the current pins everywhere else.
+      sessions: ${{ matrix.python-version == '3.10' && '["minimums"]' || '["tests"]' }}
     permissions:
       contents: read
 
