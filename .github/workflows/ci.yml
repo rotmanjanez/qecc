@@ -17,7 +17,7 @@ permissions: {}
 jobs:
   change-detection:
     name: 🔍 Change
-    uses: rotmanjanez/workflows/.github/workflows/reusable-change-detection.yml@16c3c1fc46f7e14d008438fee7062708e70ece01 # feat/python-version-matrix
+    uses: rotmanjanez/workflows/.github/workflows/reusable-change-detection.yml@ef60ea39398700f6553d8caae38ca50a93814ba6 # feat/python-version-matrix
     permissions:
       contents: read
 
@@ -30,7 +30,7 @@ jobs:
         # Linux-only while testing the new one-version-per-job architecture
         runs-on: [ubuntu-24.04, ubuntu-24.04-arm]
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-tests.yml@16c3c1fc46f7e14d008438fee7062708e70ece01 # feat/python-version-matrix
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-tests.yml@ef60ea39398700f6553d8caae38ca50a93814ba6 # feat/python-version-matrix
     with:
       runs-on: ${{ matrix.runs-on }}
       python-version: ${{ matrix.python-version }}
@@ -41,7 +41,7 @@ jobs:
     name: 🐍 Coverage
     needs: [change-detection, python-tests]
     if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-coverage.yml@16c3c1fc46f7e14d008438fee7062708e70ece01 # feat/python-version-matrix
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-coverage.yml@ef60ea39398700f6553d8caae38ca50a93814ba6 # feat/python-version-matrix
     permissions:
       contents: read
       id-token: write
@@ -50,7 +50,7 @@ jobs:
     name: 🐍 Lint
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-python-linter)
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-linter.yml@16c3c1fc46f7e14d008438fee7062708e70ece01 # feat/python-version-matrix
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-linter.yml@ef60ea39398700f6553d8caae38ca50a93814ba6 # feat/python-version-matrix
     with:
       enable-ty: true
       enable-mypy: false
@@ -61,7 +61,7 @@ jobs:
     name: 🚀 CD
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cd)
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-packaging-sdist.yml@16c3c1fc46f7e14d008438fee7062708e70ece01 # feat/python-version-matrix
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-packaging-sdist.yml@ef60ea39398700f6553d8caae38ca50a93814ba6 # feat/python-version-matrix
     permissions:
       contents: read
 
@@ -69,7 +69,7 @@ jobs:
     name: 🚀 CD
     needs: change-detection
     if: fromJSON(needs.change-detection.outputs.run-cd)
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-packaging-wheel-build.yml@16c3c1fc46f7e14d008438fee7062708e70ece01 # feat/python-version-matrix
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-packaging-wheel-build.yml@ef60ea39398700f6553d8caae38ca50a93814ba6 # feat/python-version-matrix
     permissions:
       contents: read
 
