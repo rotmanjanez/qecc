@@ -15,13 +15,68 @@ concurrency:
 permissions: {}
 
 jobs:
-  python:
-    name: 🐍
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-ci.yml@bd370e4c2084963137993badc355952f3587fe34 # feat/python-version-matrix
+  change-detection:
+    name: 🔍 Change
+    uses: rotmanjanez/workflows/.github/workflows/reusable-change-detection.yml@1db8e738969de071287afc054a8d957571bc9508 # feat/python-version-matrix
+    with:
+      # 🚧 measurement run: a change to this file alone must still reach the
+      # packaging jobs, since they are what populate the uv cache entry.
+      additional-cd-files: |
+        .github/workflows/ci.yml
+    permissions:
+      contents: read
+
+  # 🚧 measurement run: `python-tests` and `python-coverage` are deliberately
+  # omitted while sizing the cache entries. Restore them from `main` afterwards.
+
+  python-linter:
+    name: 🐍 Lint
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-python-linter)
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-linter.yml@1db8e738969de071287afc054a8d957571bc9508 # feat/python-version-matrix
     with:
       enable-ty: true
       enable-mypy: false
-    secrets: inherit
     permissions:
       contents: read
-      id-token: write
+
+  build-sdist:
+    name: 🚀 CD
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cd)
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-packaging-sdist.yml@1db8e738969de071287afc054a8d957571bc9508 # feat/python-version-matrix
+    permissions:
+      contents: read
+
+  build-wheel:
+    name: 🚀 CD
+    needs: change-detection
+    if: fromJSON(needs.change-detection.outputs.run-cd)
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-packaging-wheel-build.yml@1db8e738969de071287afc054a8d957571bc9508 # feat/python-version-matrix
+    permissions:
+      contents: read
+
+  # this job does nothing and is only used for branch protection
+  required-checks-pass:
+    name: 🚦 Check
+    if: always()
+    needs:
+      - change-detection
+      - python-linter
+      - build-sdist
+      - build-wheel
+    runs-on: ubuntu-slim
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
+        with:
+          allowed-skips: >-
+            ${{
+              !fromJSON(needs.change-detection.outputs.run-python-linter)
+              && 'python-linter,' || ''
+            }}
+            ${{
+              !fromJSON(needs.change-detection.outputs.run-cd)
+              && 'build-sdist,build-wheel' || ''
+            }}
+          jobs: ${{ toJSON(needs) }}
