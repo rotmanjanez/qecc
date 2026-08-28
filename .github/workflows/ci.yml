@@ -15,49 +15,13 @@ concurrency:
 permissions: {}
 
 jobs:
-  change-detection:
-    name: 🔍 Change
-    uses: rotmanjanez/workflows/.github/workflows/reusable-change-detection.yml@ef60ea39398700f6553d8caae38ca50a93814ba6 # feat/python-version-matrix
-    permissions:
-      contents: read
-
-  python-ci:
+  python:
     name: 🐍
-    needs: change-detection
-    if: >-
-      ${{ fromJSON(needs.change-detection.outputs.run-python-tests)
-      || fromJSON(needs.change-detection.outputs.run-python-linter)
-      || fromJSON(needs.change-detection.outputs.run-cd) }}
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-ci.yml@8316d79dda733aaf3aa3c0270aae965898130b10 # feat/python-version-matrix
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-ci.yml@50addf744ad20c75c7f9f4e2278a6bf6efe6ddcf # feat/python-version-matrix
     with:
-      runs-on: '["ubuntu-24.04", "ubuntu-24.04-arm", "macos-26", "windows-2025"]'
-      python-versions: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
-      run-tests: ${{ fromJSON(needs.change-detection.outputs.run-python-tests) }}
-      run-linter: ${{ fromJSON(needs.change-detection.outputs.run-python-linter) }}
-      run-packaging: ${{ fromJSON(needs.change-detection.outputs.run-cd) }}
       enable-ty: true
       enable-mypy: false
+    secrets: inherit
     permissions:
       contents: read
       id-token: write
-
-  # this job does nothing and is only used for branch protection
-  required-checks-pass:
-    name: 🚦 Check
-    if: always()
-    needs:
-      - change-detection
-      - python-ci
-    runs-on: ubuntu-slim
-    steps:
-      - name: Decide whether the needed jobs succeeded or failed
-        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
-        with:
-          allowed-skips: >-
-            ${{
-              !fromJSON(needs.change-detection.outputs.run-python-tests)
-              && !fromJSON(needs.change-detection.outputs.run-python-linter)
-              && !fromJSON(needs.change-detection.outputs.run-cd)
-              && 'python-ci' || ''
-            }}
-          jobs: ${{ toJSON(needs) }}
