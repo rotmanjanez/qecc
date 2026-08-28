@@ -24,42 +24,22 @@ jobs:
   python-ci:
     name: 🐍
     needs: change-detection
-    if: fromJSON(needs.change-detection.outputs.run-python-tests)
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-ci.yml@6c07f7d05a83fe90e58ac1dfcd9ae7280f536bbc # feat/python-version-matrix
+    if: >-
+      ${{ fromJSON(needs.change-detection.outputs.run-python-tests)
+      || fromJSON(needs.change-detection.outputs.run-python-linter)
+      || fromJSON(needs.change-detection.outputs.run-cd) }}
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-ci.yml@8316d79dda733aaf3aa3c0270aae965898130b10 # feat/python-version-matrix
     with:
-      # Linux-only while testing the new architecture
-      runs-on: '["ubuntu-24.04", "ubuntu-24.04-arm"]'
+      runs-on: '["ubuntu-24.04", "ubuntu-24.04-arm", "macos-26", "windows-2025"]'
       python-versions: '["3.10", "3.11", "3.12", "3.13", "3.14"]'
-    permissions:
-      contents: read
-      id-token: write
-
-  python-linter:
-    name: 🐍 Lint
-    needs: change-detection
-    if: fromJSON(needs.change-detection.outputs.run-python-linter)
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-linter.yml@ef60ea39398700f6553d8caae38ca50a93814ba6 # feat/python-version-matrix
-    with:
+      run-tests: ${{ fromJSON(needs.change-detection.outputs.run-python-tests) }}
+      run-linter: ${{ fromJSON(needs.change-detection.outputs.run-python-linter) }}
+      run-packaging: ${{ fromJSON(needs.change-detection.outputs.run-cd) }}
       enable-ty: true
       enable-mypy: false
     permissions:
       contents: read
-
-  build-sdist:
-    name: 🚀 CD
-    needs: change-detection
-    if: fromJSON(needs.change-detection.outputs.run-cd)
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-packaging-sdist.yml@ef60ea39398700f6553d8caae38ca50a93814ba6 # feat/python-version-matrix
-    permissions:
-      contents: read
-
-  build-wheel:
-    name: 🚀 CD
-    needs: change-detection
-    if: fromJSON(needs.change-detection.outputs.run-cd)
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-packaging-wheel-build.yml@ef60ea39398700f6553d8caae38ca50a93814ba6 # feat/python-version-matrix
-    permissions:
-      contents: read
+      id-token: write
 
   # this job does nothing and is only used for branch protection
   required-checks-pass:
@@ -68,9 +48,6 @@ jobs:
     needs:
       - change-detection
       - python-ci
-      - python-linter
-      - build-sdist
-      - build-wheel
     runs-on: ubuntu-slim
     steps:
       - name: Decide whether the needed jobs succeeded or failed
@@ -79,14 +56,8 @@ jobs:
           allowed-skips: >-
             ${{
               !fromJSON(needs.change-detection.outputs.run-python-tests)
-              && 'python-ci,' || ''
-            }}
-            ${{
-              !fromJSON(needs.change-detection.outputs.run-python-linter)
-              && 'python-linter,' || ''
-            }}
-            ${{
-              !fromJSON(needs.change-detection.outputs.run-cd)
-              && 'build-sdist,build-wheel' || ''
+              && !fromJSON(needs.change-detection.outputs.run-python-linter)
+              && !fromJSON(needs.change-detection.outputs.run-cd)
+              && 'python-ci' || ''
             }}
           jobs: ${{ toJSON(needs) }}
