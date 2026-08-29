@@ -32,6 +32,7 @@ def translate_layout_circuit(
     """
     terminal_pairs = []
     for pair in pairs:
+        # a tuple pair addresses two layout keys; anything else is a factory position
         if isinstance(pair, tuple):
             pos1_raw = layout[pair[0]]
             pos2_raw = layout[pair[1]]
