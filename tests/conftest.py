@@ -9,9 +9,10 @@
 
 from __future__ import annotations
 
-import matplotlib
+import os
 
-# The plotting tests only need figures to be rendered, never shown. Pinning the
-# non-interactive backend keeps them off the runners' GUI toolkits, which are not
-# always usable (windows-2025 ships no working Tcl/Tk).
-matplotlib.use("Agg")
+# The plotting tests never show a figure, so keep matplotlib off the runners' GUI
+# toolkits, which are not always usable (windows-2025 ships no working Tcl/Tk).
+# Set through the environment rather than `matplotlib.use` so that matplotlib is
+# not imported before the tests that need it.
+os.environ.setdefault("MPLBACKEND", "Agg")
