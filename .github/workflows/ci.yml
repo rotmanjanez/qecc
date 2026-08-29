@@ -17,7 +17,7 @@ permissions: {}
 jobs:
   python:
     name: 🐍
-    uses: rotmanjanez/workflows/.github/workflows/reusable-python-ci.yml@12fd52facd6563d0e7a546dd591d8c0d5863aa40 # feat/python-version-matrix
+    uses: rotmanjanez/workflows/.github/workflows/reusable-python-ci.yml@1b7ef95f9331f2e42c8ba75315deaecfbe007981 # feat/python-version-matrix
     with:
       enable-ty: true
       enable-mypy: false
